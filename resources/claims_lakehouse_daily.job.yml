@@ -1,0 +1,62 @@
+# Multi-task daily claims job: setup -> pipeline -> dq_check -> dq_gate ->
+# publish_gold, triggered on file arrival in the source catalog's landing
+# volume. Mirrors the live claims_daily job but under a distinct name.
+resources:
+  jobs:
+    claims_lakehouse_daily:
+      name: claims_lakehouse_daily
+
+      parameters:
+        - name: source_catalog
+          default: ${var.source_catalog}
+        - name: target_catalog
+          default: ${var.target_catalog}
+      environments:
+        - environment_key: serverless
+          spec:
+            environment_version: '6'
+
+      max_concurrent_runs: 1
+      queue:
+        enabled: true
+
+      trigger:
+        file_arrival:
+          url: /Volumes/${var.source_catalog}/raw/landing/claims/claims_raw/
+        pause_status: UNPAUSED
+
+      tasks:
+        - task_key: setup
+          notebook_task:
+            notebook_path: ../DE - Scenario based Assignment 1/00_setup.ipynb
+
+        - task_key: pipeline
+          depends_on:
+            - task_key: setup
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.claims_lakehouse_pipeline.id}
+          max_retries: 1
+          retry_on_timeout: true
+
+        - task_key: dq_check
+          depends_on:
+            - task_key: pipeline
+          environment_key: serverless
+          notebook_task:
+            notebook_path: ../DE - Scenario based Assignment 1/Quality_checks.sql
+
+        - task_key: dq_gate
+          depends_on:
+            - task_key: dq_check
+          condition_task:
+            left: '{{tasks.dq_check.values.dq_problems}}'
+            op: EQUAL_TO
+            right: '0'
+
+        - task_key: publish_gold
+          depends_on:
+            - task_key: dq_gate
+              outcome: 'true'
+          environment_key: serverless
+          notebook_task:
+            notebook_path: ../DE - Scenario based Assignment 1/publish_gold.ipynb

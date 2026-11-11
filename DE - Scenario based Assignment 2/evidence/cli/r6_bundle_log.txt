@@ -1,0 +1,76 @@
+R6 — Declarative Automation Bundle (claims_lakehouse) deploy/run evidence
+Date: 2026-11-11  Operator: deepaksinghal@cyntexa.com (Genie Code CLI runs)
+Bundle root (git repo root): /Users/deepaksinghal@cyntexa.com/-DE---Scenario-based-Assignment-1
+Targets: dev (claims_dev), prod (claims_prod)
+
+Pre-step — source fix (src/claims_quarantine_audit.py):
+  Top-level `spark.conf.get('target_catalog', 'claims')` raised
+  AnalysisException CONFIG_NOT_AVAILABLE.WITHOUT_SUGGESTION (SQLSTATE 42K0I)
+  when the file was evaluated on Serverless outside the pipeline.
+  Fix: try/except guard with fallback TARGET_CATALOG='claims'. Also replaced
+  withColumn('rn', row_number(...)) with select(F.col('*'), row_number(...))
+  in _scored_latest_claims (lint SCPAP004).
+
+STEP 1 — Validity check (both targets, in this order):
+  $ databricks bundle validate --strict --target dev
+    Name: claims_lakehouse / Target: dev
+    Path: /Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/dev
+    Validation OK!
+  $ databricks bundle validate --strict --target prod
+    Name: claims_lakehouse / Target: prod
+    Path: /Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/prod
+    Validation OK!
+
+STEP 2 — Deploy dev:
+  $ databricks bundle deploy --target dev
+    Current Deployment Version: .../deployments/572495547298018?version=12
+    Created pipelines.claims_lakehouse_pipeline
+    Created jobs.claims_lakehouse_daily
+    Files: 0 uploaded, 0 deleted / Resources: 2 created, 0 changed, 0 deleted, 0 unchanged
+
+STEP 3 — Run dev (via the job, per pipeline-thru-job requirement):
+  $ databricks bundle run claims_lakehouse_pipeline --target dev
+    -> FAILED: update e6c1db wrote claims_dev.silver.members_quarantine with
+       [NO_SUCH_CATALOG_EXCEPTION] Catalog 'claims_dev' was not found.
+       (root cause: bundle-published catalog claims_dev did not exist yet;
+        direct pipeline run has no setup task)
+  $ databricks bundle run claims_lakehouse_daily --target dev
+    Run URL: .../jobs/133140697133477/runs/758794141233785
+    10:19:42 RUNNING / 10:22:25 TERMINATED SUCCESS
+    Tasks all SUCCESS: setup, pipeline, dq_check, dq_gate, publish_gold
+    (setup = 00_setup.ipynb creates claims_dev + raw/bronze/silver/gold via
+     :target_catalog job parameter, then pipeline runs against it)
+
+STEP 4 — Dev verification (query results, 2026-11-11):
+  claims_dev.silver.claims_quarantine_rule_audit:
+    Q-A referential integrity      violating=6  quarantined=6  in_sync=True
+    Q-B date ordering + window     violating=50 quarantined=50 in_sync=True
+    Q-C amount sanity              violating=6  quarantined=6  in_sync=True
+    Q-D status consistency         violating=6  quarantined=6  in_sync=True
+    Q-E room math                  violating=9  quarantined=9  in_sync=True
+  claims_dev.gold.claims_enriched = 3046 rows; claims_dev.gold.hospital_monthly = 469 rows
+
+STEP 5 — Deploy prod (user-confirmed in chat):
+  $ databricks bundle deploy --target prod
+    Files: 0 uploaded, 0 deleted
+    Resources: 0 created, 0 changed, 0 deleted, 2 unchanged
+    (prod pipeline + job already existed at version parity)
+
+STEP 6 — Run prod (via the job):
+  $ databricks bundle run claims_lakehouse_daily --target prod
+    Run URL: .../jobs/967381581150679/runs/40223474666902
+    10:31:13 RUNNING / 10:33:14 TERMINATED SUCCESS
+    Tasks all SUCCESS: setup, pipeline, dq_check, dq_gate, publish_gold
+
+STEP 7 — Prod verification (query results, 2026-11-11):
+  claims_prod.silver.claims_quarantine_rule_audit:
+    Q-A referential integrity      violating=6  quarantined=6  in_sync=True
+    Q-B date ordering + window     violating=50 quarantined=50 in_sync=True
+    Q-C amount sanity              violating=6  quarantined=6  in_sync=True
+    Q-D status consistency         violating=6  quarantined=6  in_sync=True
+    Q-E room math                  violating=9  quarantined=9  in_sync=True
+  claims_prod.gold.claims_enriched = 3046 rows; claims_prod.gold.hospital_monthly = 469 rows
+  (identical to dev: both targets built from the same claims landing volume)
+
+R6 COMPLETE: validate dev -> deploy dev -> run dev -> deploy prod -> run prod,
+all green.

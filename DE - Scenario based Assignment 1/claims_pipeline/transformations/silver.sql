@@ -29,12 +29,12 @@ from (
   from (
     select * from (
       select *, row_number() over (partition by member_id order by file_path desc) rn
-      from ${catalog}.bronze.members
+      from ${target_catalog}.bronze.members
     ) ranked where rn = 1
   ) c
 ) f;
 
-create or refresh materialized view ${catalog}.silver.members_clean as
+create or refresh materialized view ${target_catalog}.silver.members_clean as
 select
   member_id, trim(name) as name, dob, upper(trim(gender)) as gender, trim(city) as city,
   trim(state) as state, trim(national_id) as national_id, trim(phone) as phone,
@@ -42,7 +42,7 @@ select
 from members_scored
 where cardinality(failed__rules) = 0;
 
-create or refresh materialized view ${catalog}.silver.members_quarantine as
+create or refresh materialized view ${target_catalog}.silver.members_quarantine as
 select *
 from members_scored
 where cardinality(failed__rules) > 0;
@@ -70,19 +70,19 @@ from (
   from (
     select * from (
       select *, row_number() over (partition by hospital_id order by file_path desc) rn
-      from ${catalog}.bronze.hospitals
+      from ${target_catalog}.bronze.hospitals
     ) ranked where rn = 1
   ) c
 ) f;
 
-create or refresh materialized view ${catalog}.silver.hospitals_clean as
+create or refresh materialized view ${target_catalog}.silver.hospitals_clean as
 select
   hospital_id, trim(name) as name, trim(city) as city, lower(trim(city_tier)) as city_tier,
   trim(state) as state, _rescued_data, file_path, ingestion_ts
 from hospitals_scored
 where cardinality(failed__rules) = 0;
 
-create or refresh materialized view ${catalog}.silver.hospitals_quarantine as
+create or refresh materialized view ${target_catalog}.silver.hospitals_quarantine as
 select *
 from hospitals_scored
 where cardinality(failed__rules) > 0;
@@ -115,12 +115,12 @@ from (
   from (
     select * from (
       select *, row_number() over (partition by plan_code order by file_path desc) rn
-      from ${catalog}.bronze.plans
+      from ${target_catalog}.bronze.plans
     ) ranked where rn = 1
   ) c
 ) f;
 
-create or refresh materialized view ${catalog}.silver.plans_clean as
+create or refresh materialized view ${target_catalog}.silver.plans_clean as
 select
   upper(trim(plan_code)) as plan_code, lower(trim(plan_family)) as plan_family,
   sum_insured, room_rent_cap_per_day, copay_pct, ped_waiting_months, initial_waiting_days,
@@ -128,7 +128,7 @@ select
 from plans_scored
 where cardinality(failed__rules) = 0;
 
-create or refresh materialized view ${catalog}.silver.plans_quarantine as
+create or refresh materialized view ${target_catalog}.silver.plans_quarantine as
 select *
 from plans_scored
 where cardinality(failed__rules) > 0;
@@ -160,21 +160,43 @@ from (
   from (
     select * from (
       select *, row_number() over (partition by hospital_id, network_from order by file_path desc) rn
-      from ${catalog}.bronze.hospital_network_history
+      from ${target_catalog}.bronze.hospital_network_history
     ) ranked where rn = 1
   ) c
 ) f;
 
-create or refresh materialized view ${catalog}.silver.hospital_network_history_clean as
+create or refresh materialized view ${target_catalog}.silver.hospital_network_history_clean as
 select
   trim(hospital_id) as hospital_id, network_from, network_to, _rescued_data, file_path, ingestion_ts
 from network_history_scored
 where cardinality(failed__rules) = 0;
 
-create or refresh materialized view ${catalog}.silver.hospital_network_history_quarantine as
+create or refresh materialized view ${target_catalog}.silver.hospital_network_history_quarantine as
 select *
 from network_history_scored
 where cardinality(failed__rules) > 0;
+
+
+create temporary view policy_changes as
+select
+  policy_id,
+  member_id,
+  plan_code,
+  to_date(effective_from, 'yyyy-MM-dd') as effective_from,
+  op
+from stream(${target_catalog}.bronze.policy);
+
+
+create or refresh streaming table ${target_catalog}.silver.policy_history;
+
+create flow policy_history_cdc as auto cdc into ${target_catalog}.silver.policy_history
+from stream(policy_changes)
+keys (policy_id)
+apply as delete when op = 'DELETE'
+sequence by effective_from
+columns * except (op, effective_from)
+stored as scd type 2;
+
 
 -- only the latest version of each claim is judged (resubmitted claims are judged on
 -- their latest version, not an earlier draft); failed__rules only ever holds Q-codes.
@@ -198,10 +220,27 @@ from (
     (c.member_id is not null and mm.member_id is null)
       or (c.hospital_id is not null and hh.hospital_id is null)
       or (c.policy_id is not null and pp.policy_id is null)
-      -- the claim's member must actually own the policy (pair must exist in the policy feed)
+      -- the claim's member must actually own the policy (pair must exist in policy_history)
       or (c.policy_id is not null and pm.policy_id is null) as qa_flag,
     c.admission_date > c.discharge_date
-      or (c.settled_ts is not null and c.submitted_ts is not null and c.submitted_ts > c.settled_ts) as qb_flag,
+      -- admission must happen on/before the claim is submitted (nulls allowed)
+      or (c.admission_date is not null and c.submitted_ts is not null
+          and c.admission_date > to_date(c.submitted_ts))
+      or (c.settled_ts is not null and c.submitted_ts is not null and c.submitted_ts > c.settled_ts)
+      -- every populated date must fall inside the allowed claims window
+      -- (2025-07-01 .. 2026-06-30); unparseable dates also fail (nulls allowed)
+      or (c.admission_date is not null
+          and (try_to_date(c.admission_date, 'yyyy-MM-dd') is null
+               or try_to_date(c.admission_date, 'yyyy-MM-dd') not between date'2025-07-01' and date'2026-06-30'))
+      or (c.discharge_date is not null
+          and (try_to_date(c.discharge_date, 'yyyy-MM-dd') is null
+               or try_to_date(c.discharge_date, 'yyyy-MM-dd') not between date'2025-07-01' and date'2026-06-30'))
+      or (c.submitted_ts is not null
+          and (to_date(c.submitted_ts) is null
+               or to_date(c.submitted_ts) not between date'2025-07-01' and date'2026-06-30'))
+      or (c.settled_ts is not null
+          and (to_date(c.settled_ts) is null
+               or to_date(c.settled_ts) not between date'2025-07-01' and date'2026-06-30')) as qb_flag,
     c.billed_amount is null or c.billed_amount <= 0
       or c.approved_amount < 0
       or c.approved_amount > c.billed_amount as qc_flag,
@@ -223,18 +262,18 @@ from (
   from (
     select * from (
       select *, row_number() over (partition by claim_id order by file_path desc) rn
-      from ${catalog}.bronze.claims
+      from ${target_catalog}.bronze.claims
     ) ranked where rn = 1
   ) c
-  left join (select distinct member_id from ${catalog}.bronze.members) mm on c.member_id = mm.member_id
-  left join (select distinct hospital_id from ${catalog}.bronze.hospitals) hh on c.hospital_id = hh.hospital_id
-  left join (select distinct policy_id from ${catalog}.bronze.policy) pp on c.policy_id = pp.policy_id
-  left join (select distinct policy_id, member_id from ${catalog}.bronze.policy) pm
+  left join (select distinct member_id from ${target_catalog}.bronze.members) mm on c.member_id = mm.member_id
+  left join (select distinct hospital_id from ${target_catalog}.bronze.hospitals) hh on c.hospital_id = hh.hospital_id
+  left join (select distinct policy_id from ${target_catalog}.silver.policy_history) pp on c.policy_id = pp.policy_id
+  left join (select distinct policy_id, member_id from ${target_catalog}.silver.policy_history) pm
     on c.policy_id = pm.policy_id and c.member_id = pm.member_id
 ) f;
 
 
-create or refresh private materialized view ${catalog}.silver.claims_clean_gated (
+create or refresh private materialized view ${target_catalog}.silver.claims_clean_gated (
   constraint q_a_referential_integrity expect (qa_flag is not true),
   constraint q_b_date_ordering expect (qb_flag is not true),
   constraint q_c_amount_sanity expect (qc_flag is not true),
@@ -243,34 +282,16 @@ create or refresh private materialized view ${catalog}.silver.claims_clean_gated
 ) as
 select * from claims_scored;
 
-create or refresh materialized view ${catalog}.silver.claims_clean as
+create or refresh materialized view ${target_catalog}.silver.claims_clean as
 select * except (rn, qa_flag, qb_flag, qc_flag, qd_flag, qe_flag, failed__rules)
-from ${catalog}.silver.claims_clean_gated
+from ${target_catalog}.silver.claims_clean_gated
 where cardinality(failed__rules) = 0;
 
 
-create or refresh materialized view ${catalog}.silver.claims_quarantine as
+create or refresh materialized view ${target_catalog}.silver.claims_quarantine as
 select * except (rn, qa_flag, qb_flag, qc_flag, qd_flag, qe_flag)
 from claims_scored
 where cardinality(failed__rules) > 0;
 
 
-create temporary view policy_changes as
-select
-  policy_id,
-  member_id,
-  plan_code,
-  to_date(effective_from, 'yyyy-MM-dd') as effective_from,
-  op
-from stream(${catalog}.bronze.policy);
 
-
-create or refresh streaming table ${catalog}.silver.policy_history;
-
-create flow policy_history_cdc as auto cdc into ${catalog}.silver.policy_history
-from stream(policy_changes)
-keys (policy_id)
-apply as delete when op = 'DELETE'
-sequence by effective_from
-columns * except (op, effective_from)
-stored as scd type 2;

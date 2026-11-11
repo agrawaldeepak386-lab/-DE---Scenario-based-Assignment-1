@@ -1,0 +1,32 @@
+# Two catalog variables decouple reading from writing:
+#   source_catalog : catalog holding the raw landing volumes (bronze reads here)
+#   target_catalog : catalog the pipeline publishes bronze/silver/gold into
+# Targets: dev -> claims_dev, prod -> claims_prod
+
+bundle:
+  name: claims_lakehouse
+
+include:
+  - resources/*.yml
+
+variables:
+  source_catalog:
+    description: Catalog holding the raw landing volumes read by the bronze layer
+    default: claims
+  target_catalog:
+    description: Catalog the pipeline publishes bronze/silver/gold tables into
+    default: claims
+
+targets:
+  dev:
+    default: true
+    mode: development
+    variables:
+      target_catalog: claims_dev
+
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Users/deepaksinghal@cyntexa.com/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      target_catalog: claims_prod
