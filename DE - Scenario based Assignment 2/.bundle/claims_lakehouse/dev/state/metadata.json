@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "config": {
+    "bundle": {
+      "name": "claims_lakehouse",
+      "target": "dev",
+      "mode": "development",
+      "git": {
+        "branch": "main",
+        "origin_url": "https://github.com/agrawaldeepak386-lab/-DE---Scenario-based-Assignment-1.git",
+        "commit": "e7b9c5ca27b803e90d6cf5900b830c1ff9084409",
+        "bundle_root_path": "."
+      }
+    },
+    "workspace": {
+      "file_path": "/Workspace/Users/deepaksinghal@cyntexa.com/-DE---Scenario-based-Assignment-1"
+    },
+    "resources": {
+      "jobs": {
+        "claims_lakehouse_daily": {
+          "id": "133140697133477",
+          "relative_path": "resources/claims_lakehouse_daily.job.yml"
+        }
+      },
+      "pipelines": {
+        "claims_lakehouse_pipeline": {
+          "id": "49350a29-8a57-468b-a734-87dc2e94e66d",
+          "relative_path": "resources/claims_lakehouse_pipeline.pipeline.yml"
+        }
+      }
+    },
+    "presets": {
+      "source_linked_deployment": true
+    }
+  },
+  "extra": {
+    "git_folder_path": "/Workspace/Users/deepaksinghal@cyntexa.com/-DE---Scenario-based-Assignment-1"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "targets": [
+    {
+      "name": "dev",
+      "default": true,
+      "mode": "development"
+    },
+    {
+      "name": "prod",
+      "mode": "production"
+    }
+  ]
+}

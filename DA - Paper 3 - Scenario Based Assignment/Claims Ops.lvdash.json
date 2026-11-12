@@ -1,0 +1,637 @@
+{
+  "datasets": [
+    {
+      "name": "claims_fact",
+      "displayName": "claims_fact",
+      "queryLines": [
+        "SELECT\n",
+        "  f.*,\n",
+        "  p.plan_code,\n",
+        "  h.city_tier,\n",
+        "  h.hospital_id,\n",
+        "  h.hospital_name,\n",
+        "  d.month_start,\n",
+        "  to_date(CAST(f.admission_date_key AS STRING), 'yyyyMMdd') AS admission_date\n",
+        "FROM\n",
+        "  claims.analytics.fact_claims f\n",
+        "    JOIN claims.analytics.dim_plan p\n",
+        "      ON f.plan_sk = p.plan_sk\n",
+        "    JOIN claims.analytics.dim_hospital h\n",
+        "      ON f.hospital_sk = h.hospital_sk\n",
+        "    JOIN claims.analytics.dim_date d\n",
+        "      ON f.admission_date_key = d.date_key"
+      ],
+      "columns": [
+        {
+          "displayName": "rejection_rate",
+          "description": "Rejected claims divided by decided claims (approved + rejected + settled), rounded to 4 dp.",
+          "expression": "ROUND(SUM(CASE WHEN `status` = 'rejected' THEN 1 ELSE 0 END) / SUM(CASE WHEN `status` IN ('approved', 'rejected', 'settled') THEN 1 ELSE 0 END), 4)"
+        },
+        {
+          "displayName": "hospital_label",
+          "description": "Hospital id and name as a single display label.",
+          "expression": "CONCAT(CAST(`hospital_id` AS STRING), ' - ', `hospital_name`)"
+        },
+        {
+          "displayName": "avg_turnaround_days",
+          "description": "Average turnaround days for settled claims, rounded to 2 dp.",
+          "expression": "ROUND(AVG(`turnaround_days`), 2)"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "d3320272",
+      "displayName": "Page 1",
+      "layout": [
+        {
+          "widget": {
+            "name": "total_claims_counter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "claims_fact",
+                  "fields": [
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Total Claims"
+              },
+              "sparkChart": {
+                "hide": true
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "count(*)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "approved_amount_counter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "claims_fact",
+                  "fields": [
+                    {
+                      "name": "sum(approved_amount)",
+                      "expression": "SUM(`approved_amount`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Approved Amount",
+                  "fields": []
+                }
+              },
+              "sparkChart": {
+                "hide": true
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(approved_amount)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 3,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "rejection_rate_counter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "claims_fact",
+                  "fields": [
+                    {
+                      "name": "measure(rejection_rate)",
+                      "expression": "MEASURE(`rejection_rate`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Rejection Rate",
+                  "fields": []
+                }
+              },
+              "sparkChart": {
+                "hide": true
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(rejection_rate)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 3,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "avg_turnaround_counter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "claims_fact",
+                  "fields": [
+                    {
+                      "name": "measure(avg_turnaround_days)",
+                      "expression": "MEASURE(`avg_turnaround_days`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Avg Turnaround (Days)",
+                  "fields": []
+                }
+              },
+              "sparkChart": {
+                "hide": true
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(avg_turnaround_days)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 3,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "hospital_paid_bar",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "claims_fact",
+                  "fields": [
+                    {
+                      "name": "city_tier",
+                      "expression": "`city_tier`"
+                    },
+                    {
+                      "name": "hospital_label",
+                      "expression": "`hospital_label`"
+                    },
+                    {
+                      "name": "sum(approved_amount)",
+                      "expression": "SUM(`approved_amount`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`status` IN ('settled')"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Total Paid by Hospital",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "hospital_label",
+                  "scale": {
+                    "categorySize": {
+                      "number": 15,
+                      "type": "number-of-categories"
+                    },
+                    "type": "categorical",
+                    "sort": {
+                      "by": "y-reversed"
+                    }
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(approved_amount)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "city_tier",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 8,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "rejection_code_bar",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "claims_fact",
+                  "fields": [
+                    {
+                      "name": "rejection_code",
+                      "expression": "`rejection_code`"
+                    },
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`status` IN ('rejected')"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Rejections by Code"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "rejection_code",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "y-reversed"
+                    }
+                  }
+                },
+                "y": {
+                  "fieldName": "count(*)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 12,
+            "width": 4,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "monthly_trend_combo",
+            "queries": [
+              {
+                "name": "combo_primary_1",
+                "query": {
+                  "datasetName": "claims_fact",
+                  "fields": [
+                    {
+                      "name": "month_start",
+                      "expression": "`month_start`"
+                    },
+                    {
+                      "name": "sum(billed_amount)",
+                      "expression": "SUM(`billed_amount`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "combo_secondary_1",
+                "query": {
+                  "datasetName": "claims_fact",
+                  "fields": [
+                    {
+                      "name": "month_start",
+                      "expression": "`month_start`"
+                    },
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Monthly Claims & Billed Trend"
+              },
+              "version": 2,
+              "widgetType": "combo",
+              "encodings": {
+                "x": {
+                  "fieldName": "month_start",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "primary": {
+                    "layers": [
+                      {
+                        "visual": "bar",
+                        "encodings": {
+                          "value": {
+                            "fieldName": "sum(billed_amount)",
+                            "displayName": "Total Billed"
+                          }
+                        },
+                        "queryName": "combo_primary_1"
+                      }
+                    ],
+                    "scale": {
+                      "type": "quantitative"
+                    }
+                  },
+                  "secondary": {
+                    "layers": [
+                      {
+                        "visual": "line",
+                        "encodings": {
+                          "value": {
+                            "fieldName": "count(*)",
+                            "displayName": "Claim Count"
+                          }
+                        },
+                        "queryName": "combo_secondary_1"
+                      }
+                    ],
+                    "scale": {
+                      "type": "quantitative"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "f78b46d4",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "plan_code_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f1ddceecd914b8b0eec78f76acb368/datasets/01f1de5864ce12609e37b6bc253d0c90_plan_code",
+                "query": {
+                  "datasetName": "claims_fact",
+                  "fields": [
+                    {
+                      "name": "plan_code",
+                      "expression": "`plan_code`"
+                    },
+                    {
+                      "name": "plan_code_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Plan"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "plan_code",
+                    "queryName": "dashboards/01f1ddceecd914b8b0eec78f76acb368/datasets/01f1de5864ce12609e37b6bc253d0c90_plan_code"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "city_tier_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f1ddceecd914b8b0eec78f76acb368/datasets/01f1de5864ce12609e37b6bc253d0c90_city_tier",
+                "query": {
+                  "datasetName": "claims_fact",
+                  "fields": [
+                    {
+                      "name": "city_tier",
+                      "expression": "`city_tier`"
+                    },
+                    {
+                      "name": "city_tier_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "City Tier"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "city_tier",
+                    "queryName": "dashboards/01f1ddceecd914b8b0eec78f76acb368/datasets/01f1de5864ce12609e37b6bc253d0c90_city_tier"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "admission_date_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f1ddceecd914b8b0eec78f76acb368/datasets/01f1de5864ce12609e37b6bc253d0c90_admission_date",
+                "query": {
+                  "datasetName": "claims_fact",
+                  "fields": [
+                    {
+                      "name": "admission_date",
+                      "expression": "`admission_date`"
+                    },
+                    {
+                      "name": "admission_date_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Admission Date"
+              },
+              "widgetType": "filter-date-range-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "admission_date",
+                    "queryName": "dashboards/01f1ddceecd914b8b0eec78f76acb368/datasets/01f1de5864ce12609e37b6bc253d0c90_admission_date"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "locale": "en-US",
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}

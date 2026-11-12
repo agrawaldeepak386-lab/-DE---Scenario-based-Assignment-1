@@ -1,0 +1,154 @@
+{
+ "state_version": 3,
+ "cli_version": "1.24.0",
+ "lineage": "c8d35f2c-dcd9-43f5-a3ef-c8c830a67b60",
+ "serial": 1,
+ "features": {
+  "deployment_history_shadow": {}
+ },
+ "state": {
+  "resources.jobs.claims_lakehouse_daily": {
+   "__id__": "967381581150679",
+   "state": {
+    "deployment": {
+     "deployment_id": "3315683591645394",
+     "kind": "BUNDLE",
+     "metadata_file_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/prod/state/metadata.json",
+     "version_id": "1"
+    },
+    "edit_mode": "UI_LOCKED",
+    "environments": [
+     {
+      "environment_key": "serverless",
+      "spec": {
+       "environment_version": "6"
+      }
+     }
+    ],
+    "format": "MULTI_TASK",
+    "max_concurrent_runs": 1,
+    "name": "claims_lakehouse_daily",
+    "parameters": [
+     {
+      "default": "claims",
+      "name": "source_catalog"
+     },
+     {
+      "default": "claims_prod",
+      "name": "target_catalog"
+     }
+    ],
+    "queue": {
+     "enabled": true
+    },
+    "tasks": [
+     {
+      "depends_on": [
+       {
+        "task_key": "pipeline"
+       }
+      ],
+      "environment_key": "serverless",
+      "notebook_task": {
+       "notebook_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/prod/files/DE - Scenario based Assignment 1/Quality_checks"
+      },
+      "task_key": "dq_check"
+     },
+     {
+      "condition_task": {
+       "left": "{{tasks.dq_check.values.dq_problems}}",
+       "op": "EQUAL_TO",
+       "right": "0"
+      },
+      "depends_on": [
+       {
+        "task_key": "dq_check"
+       }
+      ],
+      "task_key": "dq_gate"
+     },
+     {
+      "depends_on": [
+       {
+        "task_key": "setup"
+       }
+      ],
+      "max_retries": 1,
+      "pipeline_task": {
+       "pipeline_id": "067b3d3d-c9dd-427e-8739-f6bd922066a0"
+      },
+      "retry_on_timeout": true,
+      "task_key": "pipeline"
+     },
+     {
+      "depends_on": [
+       {
+        "outcome": "true",
+        "task_key": "dq_gate"
+       }
+      ],
+      "environment_key": "serverless",
+      "notebook_task": {
+       "notebook_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/prod/files/DE - Scenario based Assignment 1/publish_gold"
+      },
+      "task_key": "publish_gold"
+     },
+     {
+      "notebook_task": {
+       "notebook_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/prod/files/DE - Scenario based Assignment 1/00_setup"
+      },
+      "task_key": "setup"
+     }
+    ],
+    "trigger": {
+     "file_arrival": {
+      "url": "/Volumes/claims/raw/landing/claims/claims_raw/"
+     },
+     "pause_status": "UNPAUSED"
+    }
+   },
+   "depends_on": [
+    {
+     "node": "resources.pipelines.claims_lakehouse_pipeline",
+     "label": "${resources.pipelines.claims_lakehouse_pipeline.id}"
+    }
+   ]
+  },
+  "resources.pipelines.claims_lakehouse_pipeline": {
+   "__id__": "067b3d3d-c9dd-427e-8739-f6bd922066a0",
+   "state": {
+    "catalog": "claims",
+    "channel": "CURRENT",
+    "configuration": {
+     "source_catalog": "claims",
+     "target_catalog": "claims_prod"
+    },
+    "continuous": false,
+    "deployment": {
+     "deployment_id": "3315683591645394",
+     "kind": "BUNDLE",
+     "metadata_file_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/prod/state/metadata.json",
+     "version_id": "1"
+    },
+    "edition": "ADVANCED",
+    "libraries": [
+     {
+      "glob": {
+       "include": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/prod/files/DE - Scenario based Assignment 1/claims_pipeline/transformations/**"
+      }
+     },
+     {
+      "glob": {
+       "include": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/prod/files/src/**"
+      }
+     }
+    ],
+    "name": "claims_lakehouse_pipeline",
+    "photon": true,
+    "root_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/prod/files/DE - Scenario based Assignment 1/claims_pipeline",
+    "serverless": true,
+    "target": "default"
+   }
+  }
+ }
+}

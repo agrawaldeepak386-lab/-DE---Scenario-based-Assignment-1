@@ -1,0 +1,161 @@
+{
+ "state_version": 3,
+ "cli_version": "1.24.0",
+ "lineage": "44428dfd-861d-42cd-9078-ae30c79ff1a5",
+ "serial": 6,
+ "features": {
+  "deployment_history_shadow": {}
+ },
+ "state": {
+  "resources.jobs.claims_lakehouse_daily": {
+   "__id__": "133140697133477",
+   "state": {
+    "deployment": {
+     "deployment_id": "572495547298018",
+     "kind": "BUNDLE",
+     "metadata_file_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/dev/state/metadata.json",
+     "version_id": "12"
+    },
+    "edit_mode": "EDITABLE",
+    "environments": [
+     {
+      "environment_key": "serverless",
+      "spec": {
+       "environment_version": "6"
+      }
+     }
+    ],
+    "format": "MULTI_TASK",
+    "max_concurrent_runs": 1,
+    "name": "[dev deepaksinghal] claims_lakehouse_daily",
+    "parameters": [
+     {
+      "default": "claims",
+      "name": "source_catalog"
+     },
+     {
+      "default": "claims_dev",
+      "name": "target_catalog"
+     }
+    ],
+    "queue": {
+     "enabled": true
+    },
+    "tags": {
+     "dev": "deepaksinghal"
+    },
+    "tasks": [
+     {
+      "depends_on": [
+       {
+        "task_key": "pipeline"
+       }
+      ],
+      "environment_key": "serverless",
+      "notebook_task": {
+       "notebook_path": "/Workspace/Users/deepaksinghal@cyntexa.com/-DE---Scenario-based-Assignment-1/DE - Scenario based Assignment 1/Quality_checks"
+      },
+      "task_key": "dq_check"
+     },
+     {
+      "condition_task": {
+       "left": "{{tasks.dq_check.values.dq_problems}}",
+       "op": "EQUAL_TO",
+       "right": "0"
+      },
+      "depends_on": [
+       {
+        "task_key": "dq_check"
+       }
+      ],
+      "task_key": "dq_gate"
+     },
+     {
+      "depends_on": [
+       {
+        "task_key": "setup"
+       }
+      ],
+      "max_retries": 1,
+      "pipeline_task": {
+       "pipeline_id": "49350a29-8a57-468b-a734-87dc2e94e66d"
+      },
+      "retry_on_timeout": true,
+      "task_key": "pipeline"
+     },
+     {
+      "depends_on": [
+       {
+        "outcome": "true",
+        "task_key": "dq_gate"
+       }
+      ],
+      "environment_key": "serverless",
+      "notebook_task": {
+       "notebook_path": "/Workspace/Users/deepaksinghal@cyntexa.com/-DE---Scenario-based-Assignment-1/DE - Scenario based Assignment 1/publish_gold"
+      },
+      "task_key": "publish_gold"
+     },
+     {
+      "notebook_task": {
+       "notebook_path": "/Workspace/Users/deepaksinghal@cyntexa.com/-DE---Scenario-based-Assignment-1/DE - Scenario based Assignment 1/00_setup"
+      },
+      "task_key": "setup"
+     }
+    ],
+    "trigger": {
+     "file_arrival": {
+      "url": "/Volumes/claims/raw/landing/claims/claims_raw/"
+     },
+     "pause_status": "UNPAUSED"
+    }
+   },
+   "depends_on": [
+    {
+     "node": "resources.pipelines.claims_lakehouse_pipeline",
+     "label": "${resources.pipelines.claims_lakehouse_pipeline.id}"
+    }
+   ]
+  },
+  "resources.pipelines.claims_lakehouse_pipeline": {
+   "__id__": "49350a29-8a57-468b-a734-87dc2e94e66d",
+   "state": {
+    "catalog": "claims",
+    "channel": "CURRENT",
+    "configuration": {
+     "source_catalog": "claims",
+     "target_catalog": "claims_dev"
+    },
+    "continuous": false,
+    "deployment": {
+     "deployment_id": "572495547298018",
+     "kind": "BUNDLE",
+     "metadata_file_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/dev/state/metadata.json",
+     "version_id": "12"
+    },
+    "development": true,
+    "edition": "ADVANCED",
+    "libraries": [
+     {
+      "glob": {
+       "include": "/Workspace/Users/deepaksinghal@cyntexa.com/-DE---Scenario-based-Assignment-1/DE - Scenario based Assignment 1/claims_pipeline/transformations/**"
+      }
+     },
+     {
+      "glob": {
+       "include": "/Workspace/Users/deepaksinghal@cyntexa.com/-DE---Scenario-based-Assignment-1/src/**"
+      }
+     }
+    ],
+    "name": "[dev deepaksinghal] claims_lakehouse_pipeline",
+    "photon": true,
+    "root_path": "/Workspace/Users/deepaksinghal@cyntexa.com/-DE---Scenario-based-Assignment-1/DE - Scenario based Assignment 1/claims_pipeline",
+    "serverless": true,
+    "tags": {
+     "dev": "deepaksinghal"
+    },
+    "target": "default"
+   }
+  }
+ }
+}

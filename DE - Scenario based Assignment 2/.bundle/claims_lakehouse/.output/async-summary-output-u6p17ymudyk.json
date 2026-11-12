@@ -1,0 +1,362 @@
+{
+  "__locations": {
+    "files": [
+      "databricks.yml",
+      "resources/claims_lakehouse_daily.job.yml",
+      "resources/claims_lakehouse_pipeline.pipeline.yml"
+    ],
+    "locations": {
+      "bundle": [
+        [
+          0,
+          7,
+          3
+        ]
+      ],
+      "include": [
+        [
+          0,
+          10,
+          3
+        ]
+      ],
+      "resources": [
+        [
+          1,
+          5,
+          3
+        ],
+        [
+          2,
+          5,
+          3
+        ]
+      ],
+      "resources.jobs": [
+        [
+          1,
+          6,
+          5
+        ]
+      ],
+      "resources.jobs.claims_lakehouse_daily": [
+        [
+          1,
+          7,
+          7
+        ]
+      ],
+      "resources.jobs.claims_lakehouse_daily.tasks": [
+        [
+          1,
+          29,
+          9
+        ]
+      ],
+      "resources.jobs.claims_lakehouse_daily.tasks[0]": [
+        [
+          1,
+          41,
+          11
+        ]
+      ],
+      "resources.jobs.claims_lakehouse_daily.tasks[1]": [
+        [
+          1,
+          48,
+          11
+        ]
+      ],
+      "resources.jobs.claims_lakehouse_daily.tasks[2]": [
+        [
+          1,
+          33,
+          11
+        ]
+      ],
+      "resources.jobs.claims_lakehouse_daily.tasks[3]": [
+        [
+          1,
+          56,
+          11
+        ]
+      ],
+      "resources.jobs.claims_lakehouse_daily.tasks[4]": [
+        [
+          1,
+          29,
+          11
+        ]
+      ],
+      "resources.pipelines": [
+        [
+          2,
+          6,
+          5
+        ]
+      ],
+      "resources.pipelines.claims_lakehouse_pipeline": [
+        [
+          2,
+          7,
+          7
+        ]
+      ],
+      "variables": [
+        [
+          0,
+          13,
+          3
+        ]
+      ]
+    },
+    "version": 1
+  },
+  "bundle": {
+    "deployment": {
+      "deployment_id": "572495547298018",
+      "latest_version_id": 7,
+      "lock": {
+        "enabled": false
+      }
+    },
+    "environment": "dev",
+    "git": {
+      "actual_branch": "main",
+      "branch": "main",
+      "bundle_root_path": ".",
+      "commit": "e7b9c5ca27b803e90d6cf5900b830c1ff9084409",
+      "origin_url": "https://github.com/agrawaldeepak386-lab/-DE---Scenario-based-Assignment-1.git"
+    },
+    "mode": "development",
+    "name": "claims_lakehouse",
+    "target": "dev"
+  },
+  "include": [
+    "resources/claims_lakehouse_daily.job.yml",
+    "resources/claims_lakehouse_pipeline.pipeline.yml"
+  ],
+  "presets": {
+    "jobs_max_concurrent_runs": 4,
+    "name_prefix": "[dev deepaksinghal] ",
+    "pipelines_development": true,
+    "tags": {
+      "dev": "deepaksinghal"
+    },
+    "trigger_pause_status": "PAUSED"
+  },
+  "resources": {
+    "jobs": {
+      "claims_lakehouse_daily": {
+        "deployment": {
+          "deployment_id": "572495547298018",
+          "kind": "BUNDLE",
+          "metadata_file_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/dev/state/metadata.json",
+          "version_id": "8"
+        },
+        "edit_mode": "EDITABLE",
+        "environments": [
+          {
+            "environment_key": "serverless",
+            "spec": {
+              "environment_version": "6"
+            }
+          }
+        ],
+        "format": "MULTI_TASK",
+        "id": "799461455938451",
+        "max_concurrent_runs": 1,
+        "name": "[dev deepaksinghal] claims_lakehouse_daily",
+        "parameters": [
+          {
+            "default": "claims",
+            "name": "source_catalog"
+          },
+          {
+            "default": "claims_dev",
+            "name": "target_catalog"
+          }
+        ],
+        "queue": {
+          "enabled": true
+        },
+        "tags": {
+          "dev": "deepaksinghal"
+        },
+        "tasks": [
+          {
+            "depends_on": [
+              {
+                "task_key": "pipeline"
+              }
+            ],
+            "environment_key": "serverless",
+            "notebook_task": {
+              "notebook_path": "/Workspace/Users/deepaksinghal@cyntexa.com/-DE---Scenario-based-Assignment-1/DE - Scenario based Assignment 1/Quality_checks"
+            },
+            "task_key": "dq_check"
+          },
+          {
+            "condition_task": {
+              "left": "{{tasks.dq_check.values.dq_problems}}",
+              "op": "EQUAL_TO",
+              "right": "0"
+            },
+            "depends_on": [
+              {
+                "task_key": "dq_check"
+              }
+            ],
+            "task_key": "dq_gate"
+          },
+          {
+            "depends_on": [
+              {
+                "task_key": "setup"
+              }
+            ],
+            "max_retries": 1,
+            "pipeline_task": {
+              "pipeline_id": "${resources.pipelines.claims_lakehouse_pipeline.id}"
+            },
+            "retry_on_timeout": true,
+            "task_key": "pipeline"
+          },
+          {
+            "depends_on": [
+              {
+                "outcome": "true",
+                "task_key": "dq_gate"
+              }
+            ],
+            "environment_key": "serverless",
+            "notebook_task": {
+              "notebook_path": "/Workspace/Users/deepaksinghal@cyntexa.com/-DE---Scenario-based-Assignment-1/DE - Scenario based Assignment 1/publish_gold"
+            },
+            "task_key": "publish_gold"
+          },
+          {
+            "notebook_task": {
+              "notebook_path": "/Workspace/Users/deepaksinghal@cyntexa.com/-DE---Scenario-based-Assignment-1/DE - Scenario based Assignment 1/00_setup"
+            },
+            "task_key": "setup"
+          }
+        ],
+        "trigger": {
+          "file_arrival": {
+            "url": "/Volumes/claims/raw/landing/claims/claims_raw/"
+          },
+          "pause_status": "UNPAUSED"
+        },
+        "url": "https://dbc-3de2c0ab-4a97.cloud.databricks.com/jobs/799461455938451?w=7474644987270626"
+      }
+    },
+    "pipelines": {
+      "claims_lakehouse_pipeline": {
+        "catalog": "claims_dev",
+        "channel": "CURRENT",
+        "configuration": {
+          "source_catalog": "claims",
+          "target_catalog": "claims_dev"
+        },
+        "continuous": false,
+        "deployment": {
+          "deployment_id": "572495547298018",
+          "kind": "BUNDLE",
+          "metadata_file_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/dev/state/metadata.json",
+          "version_id": "8"
+        },
+        "development": true,
+        "edition": "ADVANCED",
+        "id": "0b456d15-0744-483e-bae1-bb9d64674df1",
+        "libraries": [
+          {
+            "glob": {
+              "include": "/Workspace/Users/deepaksinghal@cyntexa.com/-DE---Scenario-based-Assignment-1/DE - Scenario based Assignment 1/claims_pipeline/transformations/**"
+            }
+          }
+        ],
+        "name": "[dev deepaksinghal] claims_lakehouse_pipeline",
+        "photon": true,
+        "root_path": "/Workspace/Users/deepaksinghal@cyntexa.com/-DE---Scenario-based-Assignment-1/DE - Scenario based Assignment 1/claims_pipeline",
+        "serverless": true,
+        "tags": {
+          "dev": "deepaksinghal"
+        },
+        "url": "https://dbc-3de2c0ab-4a97.cloud.databricks.com/pipelines/0b456d15-0744-483e-bae1-bb9d64674df1?w=7474644987270626"
+      }
+    }
+  },
+  "sync": {
+    "paths": [
+      "."
+    ]
+  },
+  "variables": {
+    "source_catalog": {
+      "default": "claims",
+      "description": "Catalog holding the raw landing volumes read by the bronze layer",
+      "value": "claims"
+    },
+    "target_catalog": {
+      "default": "claims_dev",
+      "description": "Catalog the pipeline publishes bronze/silver/gold tables into",
+      "value": "claims_dev"
+    }
+  },
+  "workspace": {
+    "artifact_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/dev/artifacts",
+    "current_user": {
+      "active": true,
+      "domain_friendly_name": "deepaksinghal",
+      "emails": [
+        {
+          "primary": true,
+          "type": "work",
+          "value": "deepaksinghal@cyntexa.com"
+        }
+      ],
+      "entitlements": [
+        {
+          "value": "allow-cluster-create"
+        },
+        {
+          "value": "allow-instance-pool-create"
+        }
+      ],
+      "groups": [
+        {
+          "$ref": "Groups/81087960022518",
+          "display": "admins",
+          "type": "direct",
+          "value": "81087960022518"
+        },
+        {
+          "$ref": "Groups/2124790945261090",
+          "display": "users-clone-2026-09-02-1611-UTC (created by Databricks)",
+          "type": "direct",
+          "value": "2124790945261090"
+        },
+        {
+          "$ref": "Groups/86835604204227",
+          "display": "users",
+          "type": "direct",
+          "value": "86835604204227"
+        }
+      ],
+      "id": "71730268075694",
+      "schemas": [
+        "urn:ietf:params:scim:schemas:core:2.0:User",
+        "urn:ietf:params:scim:schemas:extension:workspace:2.0:User"
+      ],
+      "short_name": "deepaksinghal",
+      "userName": "deepaksinghal@cyntexa.com"
+    },
+    "file_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/dev/files",
+    "profile": "workspace_profile",
+    "resource_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/dev/resources",
+    "root_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/dev",
+    "state_path": "/Workspace/Users/deepaksinghal@cyntexa.com/.bundle/claims_lakehouse/dev/state",
+    "sync_mode": "in-place"
+  }
+}

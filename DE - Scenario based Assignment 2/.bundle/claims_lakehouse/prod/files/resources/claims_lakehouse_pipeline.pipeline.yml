@@ -1,0 +1,33 @@
+# Spark Declarative Pipeline: bronze (Auto Loader) + silver scoring/gating.
+# Mirrors the live claims_pipeline (serverless, photon, CURRENT channel) but is
+# named distinctly and parameterized by a single catalog variable.
+resources:
+  pipelines:
+    claims_lakehouse_pipeline:
+      name: claims_lakehouse_pipeline
+
+      # Default publish location for the pipeline; all datasets in
+      # bronze.sql / silver.sql are fully qualified via ${target_catalog}.
+      catalog: ${var.source_catalog}
+      target: default
+
+      root_path: ../DE - Scenario based Assignment 1/claims_pipeline
+      libraries:
+        - glob:
+            include: ../DE - Scenario based Assignment 1/claims_pipeline/transformations/**
+        # R7: quarantine-rules module + the Python audit source that imports it
+        - glob:
+            include: ../src/**
+
+      serverless: true
+      photon: true
+      channel: CURRENT
+      continuous: false
+
+      configuration:
+        # These keys resolve the ${...} references in the SQL: bronze reads
+        # /Volumes/${source_catalog}/raw/landing and all layers write
+        # ${target_catalog}.bronze / .silver etc.
+       
+        source_catalog: ${var.source_catalog}
+        target_catalog: ${var.target_catalog}

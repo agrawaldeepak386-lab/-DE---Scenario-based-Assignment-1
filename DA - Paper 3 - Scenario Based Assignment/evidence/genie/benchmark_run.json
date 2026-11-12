@@ -1,0 +1,93 @@
+{
+  "space_id": "01f1ddcedbb9106b99b8b67b07bd1570",
+  "space_title": "Saffron Shield Claims Q&A",
+  "run_date": "2026-11-12",
+  "source_of_questions": "/Volumes/claims/raw/landing/genie_benchmarks.json",
+  "method": "Each benchmark question was asked in the Genie space exactly as worded (held-out wording, not seen in trusted examples). The generated SQL and answer were captured per question and compared against the ground-truth SQL executed directly on claims.analytics (money to 2 dp, rates to 4 dp).",
+  "pass_gate": "at least 8 of 10 correct",
+  "score": {"correct": 10, "total": 10, "passed": true},
+  "results": [
+    {
+      "id": "B01",
+      "question": "How many claims were admitted in March 2026?",
+      "ground_truth": 288,
+      "genie_answer": 288,
+      "genie_sql": "SELECT COUNT(*) FROM claims.analytics.fact_claims f JOIN claims.analytics.dim_date d ON f.admission_date_key = d.date_key WHERE d.year = 2026 AND d.month = 3",
+      "correct": true
+    },
+    {
+      "id": "B02",
+      "question": "What is the overall claim rejection rate?",
+      "ground_truth": 0.1471,
+      "genie_answer": 0.1471,
+      "genie_sql": "rejected / decided on fact_claims, decided = status IN (approved, rejected, settled): 397 / 2699 = 0.1471; submitted claims excluded per space instructions",
+      "correct": true
+    },
+    {
+      "id": "B03",
+      "question": "What is the rejection rate for each plan?",
+      "ground_truth": {"SENIOR": 0.1603, "GOLD_IND": 0.1565, "SILVER_IND": 0.1345, "CORP_GROUP": 0.1243},
+      "genie_answer": {"SENIOR": 0.1603, "GOLD_IND": 0.1565, "SILVER_IND": 0.1345, "CORP_GROUP": 0.1243},
+      "genie_sql": "Rejection rate per plan_code joined on fact_claims.plan_sk (plan at admission), rejected / decided with NULLIF, rounded to 4 dp",
+      "correct": true
+    },
+    {
+      "id": "B04",
+      "question": "How many settled claims came from metro and from non-metro hospitals?",
+      "ground_truth": {"metro": 902, "non_metro": 948},
+      "genie_answer": {"metro": 902, "non_metro": 948},
+      "genie_sql": "SELECT h.city_tier, COUNT(*) FROM fact_claims f JOIN dim_hospital h ON f.hospital_sk = h.hospital_sk WHERE f.status = 'settled' GROUP BY h.city_tier",
+      "correct": true
+    },
+    {
+      "id": "B05",
+      "question": "What is the total amount paid on settled claims for the GOLD_IND plan?",
+      "ground_truth": 42460425.14,
+      "genie_answer": 42460425.14,
+      "genie_sql": "SELECT ROUND(SUM(f.approved_amount), 2) FROM fact_claims f JOIN dim_plan p ON f.plan_sk = p.plan_sk WHERE f.status = 'settled' AND p.plan_code = 'GOLD_IND' (paid = approved amount of settled claims only)",
+      "correct": true
+    },
+    {
+      "id": "B06",
+      "question": "What is the average turnaround in days for settled cashless claims?",
+      "ground_truth": 15.6877,
+      "genie_answer": 15.69,
+      "genie_sql": "SELECT ROUND(AVG(turnaround_days), 2) FROM fact_claims WHERE status = 'settled' AND claim_type = 'cashless' AND turnaround_days IS NOT NULL",
+      "correct": true,
+      "note": "Genie rounded to 2 dp; matches ground truth rounded to 2 dp (15.69)."
+    },
+    {
+      "id": "B07",
+      "question": "How many claims were at hospitals that were out of network on the admission date?",
+      "ground_truth": 617,
+      "genie_answer": 617,
+      "genie_sql": "SELECT COUNT(*) FROM fact_claims WHERE is_network_at_admission = false",
+      "correct": true
+    },
+    {
+      "id": "B08",
+      "question": "Which 3 hospitals had the highest total billed amount?",
+      "ground_truth": [["HOS-022", 10301969.04], ["HOS-017", 9266817.48], ["HOS-011", 9252635.14]],
+      "genie_answer": [["HOS-022", 10301969.04], ["HOS-017", 9266817.48], ["HOS-011", 9252635.14]],
+      "genie_sql": "SELECT h.hospital_id, ROUND(SUM(f.billed_amount), 2) FROM fact_claims f JOIN dim_hospital h ON f.hospital_sk = h.hospital_sk GROUP BY h.hospital_id ORDER BY 2 DESC LIMIT 3",
+      "correct": true
+    },
+    {
+      "id": "B09",
+      "question": "Which plan has the highest loss ratio over the whole year?",
+      "ground_truth": {"CORP_GROUP": 38.5762},
+      "genie_answer": {"CORP_GROUP": 38.58},
+      "genie_sql": "SELECT plan_code, ROUND(SUM(paid_amount) / NULLIF(SUM(earned_premium), 0), 2) FROM claims.analytics.w01 GROUP BY plan_code ORDER BY 2 DESC LIMIT 1 (loss ratio far above 1 is expected per space instructions)",
+      "correct": true,
+      "note": "Genie rounded to 2 dp; matches ground truth rounded to 2 dp (38.58)."
+    },
+    {
+      "id": "B10",
+      "question": "How many claims were rejected for missing documents?",
+      "ground_truth": 106,
+      "genie_answer": 106,
+      "genie_sql": "SELECT COUNT(*) FROM fact_claims WHERE status = 'rejected' AND rejection_code = 'RJ-DOCS'",
+      "correct": true
+    }
+  ]
+}

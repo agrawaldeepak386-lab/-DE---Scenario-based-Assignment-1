@@ -1,0 +1,47 @@
+{
+  "space_id": "01f1ddcedbb9106b99b8b67b07bd1570",
+  "title": "Saffron Shield Claims Q&A",
+  "warehouse_id": "c5bf9dda5ab27d2f",
+  "create_time": "2026-11-11T12:53:14.453Z",
+  "data_sources": [
+    "claims.analytics.fact_claims",
+    "claims.analytics.dim_date",
+    "claims.analytics.dim_member",
+    "claims.analytics.dim_hospital",
+    "claims.analytics.dim_plan",
+    "claims.analytics.w01"
+  ],
+  "instructions": [
+    "Rejection rate ALWAYS means rejected claims / DECIDED claims (decided = approved + rejected + settled). A claim still at 'submitted' has not been decided - it is on neither side of the fraction. Never divide by all claims.",
+    "Paid = approved amount of SETTLED claims only.",
+    "Weekly = Monday-starting week of the submission date.",
+    "Plan = the plan version at the claim's admission (fact_claims.plan_sk), never the member's current plan.",
+    "Loss ratios in this data are far above 1 - that is expected; do not 'fix' it."
+  ],
+  "trusted_examples": [
+    {
+      "name": "Claims per status",
+      "sql": "SELECT status, COUNT(*) AS claim_count FROM claims.analytics.fact_claims GROUP BY status",
+      "expected": {"settled": 1850, "rejected": 397, "submitted": 347, "approved": 452}
+    },
+    {
+      "name": "Hospitals with the most rejections last admission month (rejection rate over DECIDED, NULLIF guard)",
+      "sql": "SELECT h.hospital_id, h.hospital_name, SUM(CASE WHEN f.status = 'rejected' THEN 1 ELSE 0 END) AS rejected_claims, SUM(CASE WHEN f.status IN ('approved','rejected','settled') THEN 1 ELSE 0 END) AS decided_claims, ROUND(SUM(CASE WHEN f.status = 'rejected' THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN f.status IN ('approved','rejected','settled') THEN 1 ELSE 0 END), 0), 4) AS rejection_rate FROM claims.analytics.fact_claims f JOIN claims.analytics.dim_hospital h ON f.hospital_sk = h.hospital_sk JOIN claims.analytics.dim_date d ON f.admission_date_key = d.date_key WHERE d.month_start = (SELECT MAX(month_start) FROM claims.analytics.dim_date) GROUP BY h.hospital_id, h.hospital_name ORDER BY rejected_claims DESC LIMIT 10"
+    },
+    {
+      "name": "Monthly claim volume and billing trend",
+      "sql": "SELECT d.month_start, COUNT(*) AS claim_count, ROUND(SUM(f.billed_amount), 2) AS total_billed FROM claims.analytics.fact_claims f JOIN claims.analytics.dim_date d ON f.admission_date_key = d.date_key GROUP BY d.month_start ORDER BY d.month_start"
+    },
+    {
+      "name": "Rejection codes driving rejections (share of all rejections)",
+      "sql": "SELECT f.rejection_code, COUNT(*) AS rejected_count, ROUND(COUNT(*) / SUM(COUNT(*)) OVER (), 4) AS share_of_rejections FROM claims.analytics.fact_claims f WHERE f.status = 'rejected' GROUP BY f.rejection_code ORDER BY rejected_count DESC"
+    }
+  ],
+  "sample_question_shapes": [
+    "How many claims are in each status?",
+    "Which hospitals had the most rejections last month, and what is their rejection rate over decided claims?",
+    "How do claim volume and billed amount trend by month?",
+    "Which rejection codes drive our rejections?"
+  ],
+  "coverage_note": "The 4 trusted examples cover the four canonical question shapes (status counts, hospital rejections with decided-only rate, monthly trend, rejection codes). The 10 benchmark questions reuse these shapes with different entities, months, and wordings - they are held out, not reworded copies of the examples. Trusted example count (4) and sample question count (4) both exceed the rubric minimum of 3."
+}
