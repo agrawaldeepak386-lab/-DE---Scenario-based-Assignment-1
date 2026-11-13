@@ -1,0 +1,3 @@
+## Weakest metric
+
+The weakest metric is MRR at 0.8889 (hit-rate@5 0.9444). The gap is a retrieval-ranking problem, not a generation one: the only gold miss is G05, whose expected chunk `02_Waiting_Periods_Individual_Plans.md#pre-existing-disease-waiting-period` is crowded out of the vector top-5 by the Senior-plan section (its 24-month PED text is textually closer to the question than the general individual-plan rule), so the model leans on the Senior section and has to infer the 36-month answer. G01 and G08 rank their expected chunk second, capping MRR below 1.0. Swapping the retriever for the R4 hybrid (RRF of vector + keyword) plus the pointwise reranker is the targeted fix; answer grounding itself shows no failures.

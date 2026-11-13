@@ -1,0 +1,45 @@
+{
+  "turns": [
+    {
+      "turn": 1,
+      "question": "What is the pre-existing disease waiting period on an individual plan?",
+      "standalone_question": "What is the pre-existing disease waiting period on an individual plan?",
+      "answer": "On an individual plan, a pre-existing disease (PED) claim is payable only after **36 months** of continuous cover.",
+      "cited_chunk_ids": [
+        "02_Waiting_Periods_Individual_Plans.md#senior-plan",
+        "03_Waiting_Periods_Group_Plans.md#pre-existing-disease-waiting-period",
+        "02_Waiting_Periods_Individual_Plans.md#how-the-waiting-period-is-checked",
+        "03_Waiting_Periods_Group_Plans.md#how-the-waiting-period-is-checked",
+        "02_Waiting_Periods_Individual_Plans.md#pre-existing-disease-waiting-period"
+      ]
+    },
+    {
+      "turn": 2,
+      "question": "Does moving from Silver to Gold restart that count?",
+      "standalone_question": "Does moving from a Silver individual plan to a Gold individual plan restart the 36-month waiting period for pre-existing disease claims?",
+      "answer": "No, moving between Silver and Gold does not restart the count, as stated in the section on \"Pre-existing disease waiting period\": \"Moving between Silver and Gold does not restart the count.\"",
+      "cited_chunk_ids": [
+        "02_Waiting_Periods_Individual_Plans.md#pre-existing-disease-waiting-period",
+        "02_Waiting_Periods_Individual_Plans.md#how-the-waiting-period-is-checked",
+        "02_Waiting_Periods_Individual_Plans.md#senior-plan",
+        "02_Waiting_Periods_Individual_Plans.md#initial-waiting-period",
+        "02_Waiting_Periods_Individual_Plans.md#overview"
+      ]
+    },
+    {
+      "turn": 3,
+      "question": "And for group plans?",
+      "standalone_question": "What is the waiting period for pre-existing disease claims for group plans?",
+      "answer": "For Corporate Group plans, a pre-existing disease (PED) claim is payable after **12 months** of continuous cover.",
+      "cited_chunk_ids": [
+        "03_Waiting_Periods_Group_Plans.md#how-the-waiting-period-is-checked",
+        "03_Waiting_Periods_Group_Plans.md#pre-existing-disease-waiting-period",
+        "02_Waiting_Periods_Individual_Plans.md#senior-plan",
+        "03_Waiting_Periods_Group_Plans.md#initial-waiting-period",
+        "02_Waiting_Periods_Individual_Plans.md#how-the-waiting-period-is-checked"
+      ]
+    }
+  ],
+  "summary": "The topic is pre-existing disease waiting periods, the plan type being discussed has shifted to group plans, and for Corporate Group plans, the waiting period for pre-existing disease claims is 12 months.",
+  "trace_id": "tr-f1cd19ca3143fc7473f5adccc26ef3e5"
+}

@@ -1,0 +1,18 @@
+{
+  "chat_databricks_reply": "A health policy typically sets two waiting periods: a \"waiting period\" or \"elimination period\" before coverage begins, and a \"pre-existing condition waiting period\" that applies to conditions that existed before the policy's effective date.",
+  "chat_openai_reply": "A health policy typically sets two waiting periods: a \"waiting period\" or \"elimination period\" before coverage begins, and a \"pre-existing condition waiting period\" that applies to conditions that existed before the policy's effective date.",
+  "waiting_facts": [
+    {
+      "doc_name": "02_Waiting_Periods_Individual_Plans.md",
+      "plan_family": "individual",
+      "initial_waiting_days": 30,
+      "ped_waiting_months": 36
+    },
+    {
+      "doc_name": "03_Waiting_Periods_Group_Plans.md",
+      "plan_family": "group",
+      "initial_waiting_days": 0,
+      "ped_waiting_months": 12
+    }
+  ]
+}
