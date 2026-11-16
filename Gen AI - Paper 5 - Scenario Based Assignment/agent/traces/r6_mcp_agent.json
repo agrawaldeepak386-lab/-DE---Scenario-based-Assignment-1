@@ -1,0 +1,13 @@
+{
+  "trace_id": "tr-96a0460d2d0a5e7088bd91f6d80ab477",
+  "tool_calls": [
+    {
+      "name": "claims__genai__lookup_claim",
+      "args": {
+        "claim_id": "CLM-10039"
+      }
+    }
+  ],
+  "final_answer": "The status of claim CLM-10039 is \"settled\".",
+  "cited_chunk_ids": []
+}

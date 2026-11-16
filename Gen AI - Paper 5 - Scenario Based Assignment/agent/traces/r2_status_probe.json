@@ -1,0 +1,13 @@
+{
+  "trace_id": "tr-9e997e6a0bc7e6ad4b1909f414772d4f",
+  "tool_calls": [
+    {
+      "name": "lookup_claim",
+      "args": {
+        "claim_id": "CLM-10042"
+      }
+    }
+  ],
+  "final_answer": "The status of claim CLM-10042 is \"approved\".",
+  "cited_chunk_ids": []
+}

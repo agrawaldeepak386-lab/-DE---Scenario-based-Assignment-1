@@ -1,0 +1,15 @@
+# claims-agent-chat - app configuration.
+# The serving endpoint name lives HERE (the app's config), never in app.py: the app
+# reads it from the CLAIMS_AGENT_ENDPOINT env var below. The endpoint is also declared
+# as the app's resource so the app's service principal is granted CAN_QUERY on it.
+command:
+  - streamlit
+  - run
+  - app.py
+env:
+  - name: CLAIMS_AGENT_ENDPOINT
+    value: claims-agent
+resources:
+  - name: claims-agent
+    type: model_serving_endpoint
+    permission: CAN_QUERY

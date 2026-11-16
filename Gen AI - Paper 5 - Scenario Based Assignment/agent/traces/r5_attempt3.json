@@ -1,0 +1,166 @@
+{
+  "question": "For CLM-20003: which plan applied, is room rent over cap, and what is payable?",
+  "attempt": 3,
+  "trace_id": "tr-8c7d6212fda419f008260d03448a74fc",
+  "route": [
+    "data",
+    "policy",
+    "adjudication",
+    "verifier"
+  ],
+  "specialist": {
+    "data": {
+      "tool": [
+        "lookup_claim",
+        "plan_at"
+      ],
+      "data": [
+        {
+          "tool": "lookup_claim",
+          "args": {
+            "claim_id": "CLM-20003"
+          },
+          "rows": [
+            {
+              "claim_id": "CLM-20003",
+              "member_id": "MEM-0493",
+              "hospital_id": "HOS-008",
+              "status": "submitted",
+              "claim_type": "cashless",
+              "admission_date": "2026-01-20",
+              "discharge_date": "2026-01-25",
+              "billed_amount": 240000.0,
+              "approved_amount": null,
+              "rejection_code": null,
+              "is_pre_existing": false,
+              "plan_code_at_admission": "SILVER_IND",
+              "plan_family": "individual",
+              "room_rent_per_day": 5000,
+              "room_rent_cap_per_day": 3000,
+              "room_rent_over_cap": true,
+              "policy_start_date": "2024-06-01",
+              "policy_tenure_months": 19,
+              "days_since_policy_start": 598,
+              "is_network_at_admission": true
+            }
+          ]
+        },
+        {
+          "tool": "plan_at",
+          "args": {
+            "member_id": "MEM-0493",
+            "as_of_date": "2026-01-20"
+          },
+          "rows": [
+            {
+              "member_id": "MEM-0493",
+              "policy_id": "POL-0493",
+              "plan_code": "SILVER_IND",
+              "plan_family": "individual",
+              "room_rent_cap_per_day": 3000,
+              "copay_pct": 0,
+              "ped_waiting_months": 36,
+              "initial_waiting_days": 30,
+              "valid_from": "2024-06-01",
+              "valid_to": "2026-02-01"
+            }
+          ]
+        }
+      ],
+      "answer": "The claim facts for CLM-20003 are: \nstatus: submitted, \nclaim type: cashless, \nadmission date: 2026-01-20, \ndischarge date: 2026-01-25, \nbilled amount: 240000.0, \napproved amount: null, \nrejection code: null, \nis pre-existing: false, \nplan code at admission: SILVER_IND, \nplan family: individual, \nroom rent per day: 5000, \nroom rent cap per day: 3000, \nroom rent over cap: true, \npolicy start date: 2024-06-01, \npolicy tenure months: 19, \ndays since policy start: 598, \nis network at admission: true.\n\nThe plan terms for MEM-0493 as of 2026-01-20 are: \nplan code: SILVER_IND, \nplan family: individual, \nroom rent cap per day: 3000, \nco-pay percentage: 0, \nPED waiting months: 36, \ninitial waiting days: 30, \nvalid from: 2024-06-01, \nvalid to: 2026-02-01.\n\nRoom rent is over cap. I don't have enough information to determine what is payable."
+    },
+    "policy": {
+      "tool": [
+        "search_policy"
+      ],
+      "data": [
+        {
+          "tool": "search_policy",
+          "args": {
+            "query": "CLM-20003 plan applied and room rent capping and proportionate deduction rule"
+          },
+          "rows": [
+            {
+              "chunk_id": "04_Room_Rent_Capping_and_Proportionate_Deduction.md#which-cap-applies",
+              "doc_name": "04_Room_Rent_Capping_and_Proportionate_Deduction.md",
+              "heading": "Which cap applies",
+              "text": "# Room Rent Capping and Proportionate Deduction\nApplies to: all Saffron Shield plans.\n\n## Which cap applies\n\nThe cap is the cap of the plan valid on the admission date. A member who upgrades from Silver to Gold after being admitted is still capped at the Silver rate for that stay. Never use the member's current plan.\n"
+            },
+            {
+              "chunk_id": "04_Room_Rent_Capping_and_Proportionate_Deduction.md#proportionate-deduction",
+              "doc_name": "04_Room_Rent_Capping_and_Proportionate_Deduction.md",
+              "heading": "Proportionate deduction",
+              "text": "# Room Rent Capping and Proportionate Deduction\nApplies to: all Saffron Shield plans.\n\n## Proportionate deduction\n\nWhen the room rent per day is above the cap, Saffron Shield does not only cut the room charge. It reduces the **whole bill** by the same proportion, because doctors' fees and procedure charges are higher in costlier rooms. The deduction percentage is (1 - cap / room rent per day) x 100, rounded to 2 decimals. Example: a Silver member in a Rs 4,000 room has a cap of Rs 3,000, so the whole bill is reduced by 25.00%. When the room rent is at or below the cap, there is no deduction.\n"
+            },
+            {
+              "chunk_id": "04_Room_Rent_Capping_and_Proportionate_Deduction.md#room-rent-caps-by-plan",
+              "doc_name": "04_Room_Rent_Capping_and_Proportionate_Deduction.md",
+              "heading": "Room rent caps by plan",
+              "text": "# Room Rent Capping and Proportionate Deduction\nApplies to: all Saffron Shield plans.\n\n## Room rent caps by plan\n\nEach plan pays room rent up to a fixed cap per day: Silver (SILVER_IND) Rs 3,000 per day, Gold (GOLD_IND) Rs 6,000 per day, Corporate Group (CORP_GROUP) Rs 5,000 per day, and Senior (SENIOR) Rs 4,000 per day.\n"
+            },
+            {
+              "chunk_id": "04_Room_Rent_Capping_and_Proportionate_Deduction.md#room-categories",
+              "doc_name": "04_Room_Rent_Capping_and_Proportionate_Deduction.md",
+              "heading": "Room categories",
+              "text": "# Room Rent Capping and Proportionate Deduction\nApplies to: all Saffron Shield plans.\n\n## Room categories\n\nDischarge summaries name the room category. Saffron Shield records it with one of four labels: `general_ward` (room rent up to Rs 2,000 per day), `twin_sharing` (Rs 2,001 to Rs 3,500), `single_private` (Rs 3,501 to Rs 5,000) and `deluxe` (above Rs 5,000).\n"
+            },
+            {
+              "chunk_id": "01_Claims_Process_Overview.md#the-four-adjudication-facts",
+              "doc_name": "01_Claims_Process_Overview.md",
+              "heading": "The four adjudication facts",
+              "text": "# Claims Process Overview\nApplies to: all Saffron Shield plans - Silver (SILVER_IND), Gold (GOLD_IND), Senior (SENIOR) and Corporate Group (CORP_GROUP).\n\n## The four adjudication facts\n\nAn adjuster decides every payout from four facts. First, the waiting period: was the policy old enough on the admission date? Second, network status: was the hospital in the Saffron Shield network on the admission date? Third, the room rent cap: was the room rent per day above the cap of the plan? Fourth, the plan at admission: the plan that applies is the one valid on the admission date, not the member's current plan. Using the member's current plan or today's network list gives wrong payouts.\n"
+            }
+          ]
+        }
+      ],
+      "answer": "For CLM-20003, the plan that applied is the one that was valid on the admission date, as stated in chunk_id \"04_Room_Rent_Capping_and_Proportionate_Deduction.md#which-cap-applies\" and \"01_Claims_Process_Overview.md#the-four-adjudication-facts\". \n\nTo determine if the room rent is over the cap, we need to know the plan and the room rent per day. The room rent caps by plan are as follows: Silver (SILVER_IND) Rs 3,000 per day, Gold (GOLD_IND) Rs 6,000 per day, Corporate Group (CORP_GROUP) Rs 5,000 per day, and Senior (SENIOR) Rs 4,000 per day, as stated in chunk_id \"04_Room_Rent_Capping_and_Proportionate_Deduction.md#room-rent-caps-by-plan\". \n\nIf the room rent per day is above the cap, the whole bill is reduced by the proportionate deduction, which is (1 - cap / room rent per day) x 100, rounded to 2 decimals, as stated in chunk_id \"04_Room_Rent_Capping_and_Proportionate_Deduction.md#proportionate-deduction\". \n\nThe payable amount would depend on the specific details of the claim, including the plan, room rent, and other charges, as stated in chunk_id \"01_Claims_Process_Overview.md#the-four-adjudication-facts\". \n\nReferences: \n\"04_Room_Rent_Capping_and_Proportionate_Deduction.md#which-cap-applies\"\n\"04_Room_Rent_Capping_and_Proportionate_Deduction.md#proportionate-deduction\"\n\"04_Room_Rent_Capping_and_Proportionate_Deduction.md#room-rent-caps-by-plan\"\n\"01_Claims_Process_Overview.md#the-four-adjudication-facts\""
+    },
+    "adjudication": {
+      "tool": [
+        "compute_payable"
+      ],
+      "data": [
+        {
+          "tool": "compute_payable",
+          "args": {
+            "plan_code": "SILVER_IND",
+            "is_pre_existing": false,
+            "policy_tenure_months": 19,
+            "days_since_policy_start": 598,
+            "is_network_at_admission": true,
+            "room_rent_per_day": 5000,
+            "billed_amount": 240000.0
+          },
+          "rows": [
+            {
+              "plan_code": "SILVER_IND",
+              "room_rent_cap_per_day": 3000,
+              "room_rent_over_cap": true,
+              "waiting_period_ok": true,
+              "payable": true,
+              "network_at_admission": true,
+              "room_rent_deduction_pct": 40.0,
+              "copay_pct": 0,
+              "reason_code": "PAYABLE_WITH_DEDUCTION",
+              "payable_amount": 144000.0
+            }
+          ]
+        }
+      ],
+      "answer": "The plan that applied is SILVER_IND. The room rent is over cap. The payable amount is 144000.0."
+    }
+  },
+  "verdict": {
+    "plan_code": "SILVER_IND",
+    "payable": true,
+    "waiting_period_ok": true,
+    "network_at_admission": true,
+    "room_rent_over_cap": true,
+    "room_rent_deduction_pct": 40.0,
+    "copay_pct": 0,
+    "reason_code": "PAYABLE_WITH_DEDUCTION",
+    "payable_amount": 144000.0,
+    "final_answer": "For CLM-20003 the plan at admission was SILVER_IND; room rent of 5000 per day is over the 3000 per day cap, so a 40.0% proportionate deduction applies; the claim is payable and the payable amount is 144000.0.",
+    "agree": true
+  }
+}

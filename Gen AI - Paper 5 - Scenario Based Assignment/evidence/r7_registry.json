@@ -1,0 +1,45 @@
+{
+  "mode": "uc",
+  "model": "claims.genai.claims_agent",
+  "versions": {
+    "1": {
+      "version": "9",
+      "system_prompt_sha": "b93d5c7d95bf"
+    },
+    "2": {
+      "version": "10",
+      "system_prompt_sha": "e3439b51c6fa",
+      "alias": "champion"
+    }
+  },
+  "champion": {
+    "alias": "champion",
+    "version": "10"
+  },
+  "endpoint": {
+    "name": "claims-agent",
+    "model": "claims.genai.claims_agent",
+    "served_version": "10",
+    "workload_type": "CPU"
+  },
+  "prompt_files": {
+    "v1": "agent/prompts/system_v1.md",
+    "v2": "agent/prompts/system_v2.md"
+  },
+  "system_prompt_sha": {
+    "v1": "b93d5c7d95bf",
+    "v2": "e3439b51c6fa"
+  },
+  "probe": {
+    "question": "What's the status of claim CLM-10039?",
+    "answer": "The status of claim CLM-10039 is settled. Verified against claims tools.",
+    "tool_calls": [
+      {
+        "name": "lookup_claim",
+        "args": {
+          "claim_id": "CLM-10039"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "app_name": "claims-agent-chat",
+  "app_url": "https://claims-agent-chat-7474644987270626.aws.databricksapps.com",
+  "endpoint_name": "claims-agent",
+  "endpoint_from_config": {
+    "env_var": "CLAIMS_AGENT_ENDPOINT",
+    "declared_in": "app.yaml (command/env section, value: claims-agent)",
+    "read_in_app": "app.py reads os.environ['CLAIMS_AGENT_ENDPOINT'] only; the endpoint name is never hardcoded in app.py"
+  },
+  "app_yaml_resource": {
+    "type": "model_serving_endpoint",
+    "name": "claims-agent",
+    "permission": "CAN_QUERY",
+    "acl_verified": "service principal c47de882-0027-4a80-89c1-28b22b0d31b4 (app-4fogfk claims-agent-chat) holds CAN_QUERY on endpoint id a6441668e0ed4181ac5370bce01c8852"
+  },
+  "framework": "streamlit",
+  "invocation": "databricks-sdk WorkspaceClient().serving_endpoints.query(name=ENDPOINT_NAME, dataframe_records=[{question}])",
+  "serves": "champion alias of claims.genai.claims_agent (v2 prompt version)",
+  "sample_qa": [
+    {
+      "question": "What's the status of claim CLM-10039?",
+      "answer": "The status of claim CLM-10039 is settled. \nVerified against claims tools.",
+      "tool_calls": [
+        {"name": "lookup_claim", "args": {"claim_id": "CLM-10039"}}
+      ]
+    },
+    {
+      "question": "What is the room rent deduction for CLM-20003?",
+      "answer": "The room rent deduction for CLM-20003 is 40.0% of the room rent. Verified against claims tools.",
+      "tool_calls": [
+        {"name": "lookup_claim", "args": {"claim_id": "CLM-20003"}},
+        {"name": "compute_payable", "args": {"claim_id": "CLM-20003"}}
+      ]
+    }
+  ],
+  "deployed": true,
+  "deployment_id": "01f1e1a77cf61c5397b81c35daa7c1e8",
+  "deployed_at": "2026-11-16T10:21:35Z"
+}

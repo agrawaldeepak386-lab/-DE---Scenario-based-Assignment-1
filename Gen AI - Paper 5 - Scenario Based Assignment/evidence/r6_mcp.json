@@ -1,0 +1,53 @@
+{
+  "transport": "managed",
+  "server": "https://dbc-3de2c0ab-4a97.cloud.databricks.com/api/2.0/mcp/functions/claims/genai",
+  "tools": [
+    "claims__genai__compute_payable",
+    "claims__genai__lookup_claim",
+    "claims__genai__plan_at",
+    "claims__genai__search_policy"
+  ],
+  "tool_parameters": {
+    "claims__genai__compute_payable": [
+      "billed_amount",
+      "days_since_policy_start",
+      "is_network_at_admission",
+      "is_pre_existing",
+      "plan_code",
+      "policy_tenure_months",
+      "room_rent_per_day"
+    ],
+    "claims__genai__lookup_claim": [
+      "claim_id"
+    ],
+    "claims__genai__plan_at": [
+      "as_of_date",
+      "member_id"
+    ],
+    "claims__genai__search_policy": [
+      "query"
+    ]
+  },
+  "calls": [
+    {
+      "tool": "claims__genai__lookup_claim",
+      "arguments": {
+        "claim_id": "CLM-10039"
+      },
+      "result": "{\"is_truncated\":false,\"columns\":[\"claim_id\",\"member_id\",\"hospital_id\",\"status\",\"claim_type\",\"admission_date\",\"discharge_date\",\"billed_amount\",\"approved_amount\",\"rejection_code\",\"is_pre_existing\",\"plan_code_at_admission\",\"plan_family\",\"room_rent_per_day\",\"room_rent_cap_per_day\",\"room_rent_over_cap\",\"policy_start_date\",\"policy_tenure_months\",\"days_since_policy_start\",\"is_network_at_admission\"],\"rows\":[[\"CLM-10039\",\"MEM-0299\",\"HOS-035\",\"settled\",\"cashless\",\"2026-01-30\",\"2026-02-06\",43690.03,30788.28,null,false,\"SENIOR\",\"senior\",3500,4000,false,\"2025-08-19\",5,164,false]]}"
+    },
+    {
+      "tool": "claims__genai__compute_payable",
+      "arguments": {
+        "plan_code": "SENIOR",
+        "is_pre_existing": false,
+        "policy_tenure_months": 5,
+        "days_since_policy_start": 164,
+        "is_network_at_admission": false,
+        "room_rent_per_day": 3500,
+        "billed_amount": 43690.03
+      },
+      "result": "{\"is_truncated\":false,\"columns\":[\"output\"],\"rows\":[[\"{\\\"plan_code\\\":\\\"SENIOR\\\",\\\"room_rent_cap_per_day\\\":4000,\\\"room_rent_over_cap\\\":false,\\\"waiting_period_ok\\\":true,\\\"payable\\\":true,\\\"network_at_admission\\\":false,\\\"room_rent_deduction_pct\\\":0.0,\\\"copay_pct\\\":30,\\\"reason_code\\\":\\\"PAYABLE_WITH_DEDUCTION\\\",\\\"payable_amount\\\":30583.02}\"]]}"
+    }
+  ]
+}
